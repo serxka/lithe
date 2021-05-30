@@ -1,9 +1,9 @@
 #include <kernel/generic.h>
+#include <kernel/kprintf.h>
+#include <kernel/multiboot.h>
 #include <kernel/types.h>
-#include <kernel/misc/kprintf.h>
 
-#include <kernel/arch/x86_64/multiboot.h>
-#include <kernel/arch/x86_64/port.h>
+#include "include/port.h"
 
 static size_t early_log_writter(uint8_t *buf, size_t len) {
 	#define EARLY_LOG_PORT (0x3F8) /* COM1 */
@@ -38,7 +38,7 @@ int kentry(uint32_t mb_magic, struct multiboot_info *mb) {
 	early_log_init();
 	
 	multiboot_scan(mb);
-	// kprintf("highest loc: %x\r\nmem amount: %d", highest_address, mem_amount / 1024 / 1024);
+	kprintf("highest loc: %x\r\nmem amount: %dKiB\r\n", highest_address, mem_amount / 1024);
 
 	return generic_main();
 }

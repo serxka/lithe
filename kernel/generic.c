@@ -1,5 +1,5 @@
 #include <kernel/generic.h>
-#include <kernel/misc/kprintf.h>
+#include <kernel/kprintf.h>
 #include <kernel/types.h>
 
 int generic_main(void) {

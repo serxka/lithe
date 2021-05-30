@@ -1,5 +1,5 @@
-#ifndef _KERNEL_ARCH_X86_64_MULTIBOOT_H_
-#define _KERNEL_ARCH_X86_64_MULTIBOOT_H_
+#ifndef _KERNEL_MULTIBOOT_H_
+#define _KERNEL_MULTIBOOT_H_
 
 #include <kernel/types.h>
 
@@ -83,4 +83,4 @@ struct multiboot_mod_list {
 };
 typedef struct multiboot_mod_list mboot_mods_t;
 
-#endif // _KERNEL_ARCH_X86_64_MULTIBOOT_H_
+#endif // _KERNEL_MULTIBOOT_H_

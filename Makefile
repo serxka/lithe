@@ -39,7 +39,7 @@ kernel.64: ${C_OBJS} ${AS_OBJS}
 kernel.32: kernel.64
 	${OC} -I elf64-x86-64 -O elf32-i386 $< $@
 
-%.o: %.c ${DEPS}
+%.o: %.c
 	${CC} ${CFLAGS} ${CPPFLAGS} -c -MMD -o $@ $<
 
 %.o: %.asm

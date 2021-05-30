@@ -1,4 +1,4 @@
+kernel.32
 kernel.64
 **/*.d
 **/*.o
-

@@ -6,4 +6,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
+typedef char symbol_t[];
+
 #endif // _KERNEL_TYPES_H_

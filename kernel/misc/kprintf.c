@@ -1,4 +1,4 @@
-#include <kernel/misc/kprintf.h>
+#include <kernel/kprintf.h>
 #include <kernel/types.h>
 
 #include <stdarg.h>
