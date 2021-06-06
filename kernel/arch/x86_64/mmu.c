@@ -7,9 +7,10 @@
 #include "include/mmu.h"
 
 #define PAGE_SHIFT (12)
-#define PAGE_SIZE (0x1 < PAGE_SHIFT)
+#define PAGE_SIZE (0x1 << PAGE_SHIFT)
+#define PAGE_MASK 0x1FFF
 
-#deinfe LARGE_PAGE_SIZE (0x1 << 21) /*2MiB*/
+#define LARGE_PAGE_SIZE (0x1 << 21) /*2MiB*/
 
 #define PAGE_KERNEL_FLAG 0x03
 #define PAGE_SIZE_FLAG 0x80
@@ -74,29 +75,63 @@ static uint32_t mmu_first_frame(void) {
 	return (uint32_t) -1;
 }
 
+extern symbol_t _kernel_vma;
+
+uintptr_t mmu_map_kernel_phys(uintptr_t logical) {
+	return logical - (uintptr_t)_kernel_vma;
+}
+
 static spinlock_t frame_alloc_lock = { 0 };
 
-#define __pagetable __attribute((aligned(PAGE_SIZE))) = {0}
+#define __pagetable __attribute((aligned(PAGE_SIZE)))
 static pml_t pml4[512] __pagetable;
 static pml_t pdpt_ident[512] __pagetable;
 static pml_t pdpt_kernl[512] __pagetable;
 static pml_t pd_2mb[2][512] __pagetable;
 
-extern symbol_t _kernel_vma;
 extern symbol_t _end;
 
+static uint8_t *heap_start;
+
 void mmu_init(size_t mem_amount) {
+	// Initalise our memory locks
 	spinlock_init(frame_alloc_lock);
 	
-	pml4[0  ].raw = (uint64_t)&pdpt_ident | PAGE_KERNEL_FLAG;
-	pml4[511].raw = (uint64_t)&pdpt_kernl | PAGE_KERNEL_FLAG;
+	// Map our kernel pml4 to 0gb (ident) and -512gb (kerenl)
+	pml4[0  ].raw = mmu_map_kernel_phys((uintptr_t)pdpt_ident) | PAGE_KERNEL_FLAG;
+	pml4[511].raw = mmu_map_kernel_phys((uintptr_t)pdpt_kernl) | PAGE_KERNEL_FLAG;
 	
-	pdpt_ident[0  ].raw = (uint64_t)&pd_2mb | PAGE_KERNEL_FLAG;
-	pdpt_kernl[510].raw = (uint64_t)&pd_2mb | PAGE_KERNEL_FLAG
+	// Start our identity mapping at 0gb
+	pdpt_ident[0  ].raw = mmu_map_kernel_phys((uintptr_t)&pd_2mb[0]) | PAGE_KERNEL_FLAG;
+	pdpt_ident[1  ].raw = mmu_map_kernel_phys((uintptr_t)&pd_2mb[1]) | PAGE_KERNEL_FLAG;
+	// and our kernel at -2gb (kernel memory model)
+	pdpt_kernl[510].raw = mmu_map_kernel_phys((uintptr_t)&pd_2mb[0]) | PAGE_KERNEL_FLAG;
+	pdpt_kernl[511].raw = mmu_map_kernel_phys((uintptr_t)&pd_2mb[1]) | PAGE_KERNEL_FLAG;
 	
+	// Go through and map all of our 2mb pages from 0-2gb
 	for (uint32_t i = 0; i < 512; ++i) {
-		pd_2mb[i] = (i * LARGE_PAGE_SIZE) | PAGE_SIZE_FLAG | PAGE_KERNEL_FLAG;
+		pd_2mb[0][i].raw = (0x00000000 + i * LARGE_PAGE_SIZE) | PAGE_SIZE_FLAG | PAGE_KERNEL_FLAG;
+		pd_2mb[1][i].raw = (0x40000000 + i * LARGE_PAGE_SIZE) | PAGE_SIZE_FLAG | PAGE_KERNEL_FLAG;
 	}
-		
-	nframes = mem_amount >> 12;
+	
+	// Load a pointer to our plm4 into cr3
+	__asm__ __volatile__("movq %0, %%cr3" : : "r"(mmu_map_kernel_phys((uintptr_t)pml4)));
+
+	// Set the amount pages of usable memory in the system
+	nframes = mem_amount >> PAGE_SHIFT;
+	// Get the amount of bytes out bitmap takes up
+	size_t frame_bytes = INDEX_FROM_BIT(nframes) * 8;
+	// Round up (8 bytes -- uint64_t) and set out frame pointer
+	frames = (uint64_t*)(((uint64_t)_end + (0x8 - 1)) & ~0x7);
+	// Zero our bitmap
+	memset(frames, 0, frame_bytes);
+	
+	// The end of our kernel and free memory after, rounding up
+	uint64_t kernel_end = ((uint64_t)_end + frame_bytes + (PAGE_SIZE - 1)) & ~0xFFF;
+	
+	// Set all the pages that we need to fit our kernel
+	for (uintptr_t i = 0; i < kernel_end; i += PAGE_SIZE)
+		mmu_frame_set(i);
+	
+	heap_start = (uint8_t*)kernel_end;
 }

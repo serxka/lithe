@@ -4,6 +4,7 @@ section .boot
 [extern _stack_bottom]
 [extern _stack_bottom_phys]
 [extern kentry]
+[extern _long_mode]
 [global _start]
 
 align 4
@@ -57,7 +58,7 @@ _multiboot_hdr:
 align 8
 _gdt:
 	dq 0                      ; Null (required first entry)
-	db 0, 0, 0, 0, 0, 10011010b, 10101111b, 0 ; code 0x8
+	db 0, 0, 0, 0, 0, 10011010b, 10100000b, 0 ; code 0x8
 	db 0, 0, 0, 0, 0, 10010010b, 00000000b, 0 ; data 0x10
 .end:
 

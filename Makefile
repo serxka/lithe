@@ -10,7 +10,7 @@ LD = ld
 OC = llvm-objcopy
 
 # C Compiler Flags
-CFLAGS = -ffreestanding -static -std=gnu11 -nostdlib -O2
+CFLAGS = -ffreestanding -static -std=gnu11 -nostdlib -O0 -g
 # Arch specific arguments
 CFLAGS += -mno-red-zone -fno-omit-frame-pointer -fno-stack-protector -mno-sse -mno-80387 -mno-mmx -mcmodel=kernel
 # Warnings
@@ -31,7 +31,7 @@ AS_OBJS = $(patsubst %.asm,%.o,$(wildcard ${SRC}/arch/${ARCH}/*.asm))
 all: kernel.32
 
 run: kernel.32
-	qemu-system-x86_64 -kernel $< -smp 1 -m 512m -no-reboot -no-shutdown
+	qemu-system-x86_64 -kernel $< -smp 1 -m 512m
 
 kernel.64: ${C_OBJS} ${AS_OBJS}
 	${CC} -T ${SRC}/arch/${ARCH}/link.ld ${CFLAGS} -Wl,--build-id=none -o $@ $^

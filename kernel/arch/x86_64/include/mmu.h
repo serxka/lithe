@@ -26,5 +26,7 @@ typedef union pml_u {
 static_assert(sizeof(pml_t) == 8, "pml_t was not 64bits");
 
 void mmu_init(size_t mem_amount);
+// Map a kernel logical address to a physical one
+uintptr_t mmu_map_kernel_phys(uintptr_t logical);
 
 #endif // _KERNEL_ARCH_X86_64_MMU_H_
