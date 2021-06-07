@@ -11,7 +11,7 @@ align 4
 _start:
 	mov esp, _stack_bottom_phys
 	push DWORD 0              
-	push ebx                  ; Push Mutliboot Info Strucutre Location
+	push ebx                  ; Push Mutliboot Info Structure Location
 	push DWORD 0              
 	push eax                  ; Push Multiboot Magic Number
 	
@@ -94,4 +94,4 @@ _long_mode:
 	pop rsi                   ; Multiboot Pointer
 	mov rsp, _stack_bottom    ; Set out higher half stack pointer
 
-	call kentry               ; Jump into our higher half 64bit kernel entry
+	call kentry               ; Jump into our higher half 64-bit kernel entry

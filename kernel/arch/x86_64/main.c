@@ -39,7 +39,8 @@ void multiboot_scan(struct multiboot_info *mb) {
 }
 
 // Because at this point header files for a single function is dumb
-extern void gdt_init(void);
+void gdt_init(void);
+void idt_init(void);
 
 void kentry(uint32_t mb_magic, struct multiboot_info *mb) {
 	early_log_init();
@@ -47,6 +48,11 @@ void kentry(uint32_t mb_magic, struct multiboot_info *mb) {
 
 	mmu_init(mem_amount);
 	gdt_init();
+	idt_init();
+
+	// Test page fault handler
+	// volatile uint8_t* ptr = (uint8_t*)0xdeadbeef;
+	// *ptr;
 
 	generic_main();
 }

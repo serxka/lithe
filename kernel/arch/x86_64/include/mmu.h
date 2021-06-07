@@ -23,7 +23,7 @@ typedef union pml_u {
 	} bits;
 	uint64_t raw;
 } pml_t;
-static_assert(sizeof(pml_t) == 8, "pml_t was not 64bits");
+static_assert(sizeof(pml_t) == 8, "pml_t was not 64-bits");
 
 void mmu_init(size_t mem_amount);
 // Map a kernel logical address to a physical one

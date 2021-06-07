@@ -12,7 +12,7 @@ size_t print_dec(uint64_t num, int (*writter)(void*, char), void *data) {
 	
 	uint32_t width = 1;
 	uint64_t i = num;
-	while (i >= 10UL) { // Test how wide the nubmer is
+	while (i >= 10UL) { // Test how wide the number is
 		i /= 10UL;
 		++width;
 	}
@@ -78,7 +78,7 @@ size_t wvaprintf(int (*writter)(void*, char), void *data, const char *fmt, va_li
 				PUTC(*fmt);
 				break;
 			case 'p':
-				// Fallthrough
+				// Fall-through
 			case 'X':
 			case 'x': {
 				unsigned long long value = (unsigned long long)(va_arg(ap, unsigned long long));

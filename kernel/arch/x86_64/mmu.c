@@ -94,7 +94,7 @@ extern symbol_t _end;
 static uint8_t *heap_start;
 
 void mmu_init(size_t mem_amount) {
-	// Initalise our memory locks
+	// Initialise our memory locks
 	spinlock_init(frame_alloc_lock);
 	
 	// Map our kernel pml4 to 0gb (ident) and -512gb (kerenl)
