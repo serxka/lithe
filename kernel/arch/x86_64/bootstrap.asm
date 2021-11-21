@@ -14,7 +14,7 @@ _start:
 	push ebx                  ; Push Mutliboot Info Structure Location
 	push DWORD 0              
 	push eax                  ; Push Multiboot Magic Number
-	
+
 	mov eax, _pml4            ; Load CR3 with the PLM4
 	mov cr3, eax
 

@@ -35,7 +35,7 @@ run: kernel.32
 
 kernel.64: ${C_OBJS} ${AS_OBJS}
 	${CC} -T ${SRC}/arch/${ARCH}/link.ld ${CFLAGS} -Wl,--build-id=none -o $@ $^
-	
+
 kernel.32: kernel.64
 	${OC} -I elf64-x86-64 -O elf32-i386 $< $@
 
@@ -44,6 +44,14 @@ kernel.32: kernel.64
 
 %.o: %.asm
 	${AS} $(ASFLAGS) -MD -MF ${@:.o=.d} -o $@ $<
+
+C_SRCS := $(shell find . -type f -name '*.h' -or -name '*.c')
+
+dry-format:
+	@clang-format --dry-run -i ${C_SRCS}
+
+format:
+	@clang-format --verbose -i ${C_SRCS}
 
 clean:
 	rm -f ${C_OBJS} ${C_OBJS:.o=.d}

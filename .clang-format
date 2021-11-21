@@ -1,0 +1,48 @@
+---
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlines: Left
+AlignOperands: true
+AlignTrailingComments: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: false
+BinPackArguments: true
+BinPackParameters: true
+BraceWrapping:
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: true
+  AfterStruct: false
+  AfterUnion: false
+  BeforeCatch: false
+  BeforeElse: false
+  IndentBraces: false
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Custom
+BreakBeforeTernaryOperators: false
+BreakConstructorInitializersBeforeComma: false
+BreakStringLiterals: false
+ColumnLimit: 80
+ContinuationIndentWidth: 8
+DerivePointerAlignment: false
+DisableFormat: false
+IndentWidth: 8
+PointerAlignment: Right
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+UseTab: Always
