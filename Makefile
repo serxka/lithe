@@ -58,4 +58,4 @@ clean:
 	rm -f ${AS_OBJS} ${AS_OBJS:.o=.d}
 	rm -f kernel.32 kernel.64
 
-.PHONY = all clean run
+.PHONY = all clean run dry-format format

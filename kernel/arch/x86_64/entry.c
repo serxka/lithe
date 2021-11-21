@@ -5,16 +5,14 @@
 #include "mmu.h"
 #include "port.h"
 
-static size_t early_log_writter(uint8_t *buf, size_t len)
-{
+static size_t early_log_writter(uint8_t *buf, size_t len) {
 #define EARLY_LOG_PORT (0x3F8) /* COM1 */
 	for (u32 i = 0; i < len; ++i)
 		port_outb(EARLY_LOG_PORT, buf[i]);
 	return len;
 }
 
-static void early_log_init(void)
-{
+static void early_log_init(void) {
 	kprintf_writter = &early_log_writter;
 }
 
@@ -24,8 +22,7 @@ static size_t mem_amount = 0;
 // for use
 static uintptr_t highest_address = 0;
 
-void multiboot_scan(struct multiboot_info *mb)
-{
+void multiboot_scan(struct multiboot_info *mb) {
 	// Get amount of memory in system
 	if (mb->flags & MULTIBOOT_INFO_MEMORY)
 		mem_amount = (uintptr_t)mb->mem_upper * 0x400 + 0x100000;
@@ -46,8 +43,7 @@ void gdt_init(void);
 void idt_init(void);
 void kmain(void);
 
-void kentry(u32 mb_magic, struct multiboot_info *mb)
-{
+void kentry(u32 mb_magic, struct multiboot_info *mb) {
 	early_log_init();
 	multiboot_scan(mb);
 

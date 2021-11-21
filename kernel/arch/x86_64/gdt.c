@@ -57,8 +57,7 @@ static struct gdt_tss gdt = {
 	.tss = {0, {0, 0, 0}, 0, {0, 0, 0, 0, 0, 0, 0}, 0, 0, 0},
 };
 
-void gdt_init(void)
-{
+void gdt_init(void) {
 	// Set our GDT pointer for asm(lgdt)
 	gdt.ptr.limit = sizeof(gdt.entries) + sizeof(gdt.tss_extra) - 1;
 	gdt.ptr.offset = (uintptr_t)&gdt.entries;

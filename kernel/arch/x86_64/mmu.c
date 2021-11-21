@@ -21,32 +21,28 @@
 u64 *frames;
 u32 nframes;
 
-static void mmu_frame_set(uintptr_t addr)
-{
+static void mmu_frame_set(uintptr_t addr) {
 	u32 frame = addr >> PAGE_SHIFT;
 	u32 idx = INDEX_FROM_BIT(frame);
 	u32 off = OFFSET_FROM_BIT(frame);
 	frames[idx] |= (0x1 << off);
 }
 
-static void mmu_frame_clear(uintptr_t addr)
-{
+static void mmu_frame_clear(uintptr_t addr) {
 	u32 frame = addr >> PAGE_SHIFT;
 	u32 idx = INDEX_FROM_BIT(frame);
 	u32 off = OFFSET_FROM_BIT(frame);
 	frames[idx] &= ~(0x1 << off);
 }
 
-static bool mmu_frame_test(uintptr_t addr)
-{
+static bool mmu_frame_test(uintptr_t addr) {
 	u32 frame = addr >> PAGE_SHIFT;
 	u32 idx = INDEX_FROM_BIT(frame);
 	u32 off = OFFSET_FROM_BIT(frame);
 	return frames[idx] & (0x1 << off);
 }
 
-static u32 mmu_first_frame(void)
-{
+static u32 mmu_first_frame(void) {
 	for (u32 i = 0; i < INDEX_FROM_BIT(nframes); ++i) {
 		if (frames[i] != (u64)-1) {
 			for (u32 b = 0; b < 64; ++b) {
@@ -72,13 +68,11 @@ static u8 *heap_start;
 static spinlock_t frame_alloc_lock = {0};
 static phys_t current_tree;
 
-phys_t mmu_kernel2phys(logi_t addr)
-{
+phys_t mmu_kernel2phys(logi_t addr) {
 	return addr - (phys_t)_kernel_vma;
 }
 
-void mmu_init(size_t mem_amount)
-{
+void mmu_init(size_t mem_amount) {
 	// Initialise our memory locks
 	spinlock_init(frame_alloc_lock);
 
@@ -132,8 +126,7 @@ void mmu_init(size_t mem_amount)
 	heap_start = (u8 *)kernel_end;
 }
 
-void mmu_switch_tree(phys_t addr)
-{
+void mmu_switch_tree(phys_t addr) {
 	current_tree = addr;
 	__asm__ __volatile__("mov %0, %%cr3" ::"r"(current_tree));
 }

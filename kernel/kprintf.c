@@ -11,8 +11,7 @@ size_t (*kprintf_writter)(uint8_t *, size_t) = NULL;
 		++written;        \
 	} while (0)
 
-size_t print_dec(uint64_t num, int (*writter)(void *, char), void *data)
-{
+size_t print_dec(uint64_t num, int (*writter)(void *, char), void *data) {
 	size_t written = 0;
 
 	u32 width = 1;
@@ -38,8 +37,7 @@ size_t print_dec(uint64_t num, int (*writter)(void *, char), void *data)
 }
 
 size_t print_hex(u64 val, bool upper, bool zeros, int (*writter)(void *, char),
-		 void *data)
-{
+		 void *data) {
 	size_t written = 0;
 
 	u32 width = 1;
@@ -67,8 +65,7 @@ size_t print_hex(u64 val, bool upper, bool zeros, int (*writter)(void *, char),
 }
 
 size_t wvaprintf(int (*writter)(void *, char), void *data, const char *fmt,
-		 va_list ap)
-{
+		 va_list ap) {
 	size_t written = 0;
 	while (*fmt != '\0') {
 		// Fast path non-format character
@@ -132,8 +129,7 @@ typedef struct snwritter_s {
 	size_t len; // Amount we have written
 } snwritter_t;
 
-static int sn_writter_fn(void *data, char c)
-{
+static int sn_writter_fn(void *data, char c) {
 	snwritter_t *self = (snwritter_t *)data;
 	if (self->size > self->len + 1) // if we still have space left to write
 		self->str[self->len++] = c;
@@ -141,22 +137,19 @@ static int sn_writter_fn(void *data, char c)
 	return 0;
 }
 
-static int kprintf_writter_fn(void *_data, char c)
-{
+static int kprintf_writter_fn(void *_data, char c) {
 	kprintf_writter((uint8_t *)&c, 1);
 	return 0;
 }
 
-int vsnkprintf(char *buf, size_t len, const char *fmt, va_list ap)
-{
+int vsnkprintf(char *buf, size_t len, const char *fmt, va_list ap) {
 	snwritter_t data = {buf, len, 0};
 	int written = wvaprintf(sn_writter_fn, (void *)&data, fmt, ap);
 	sn_writter_fn(&data, '\0');
 	return written;
 }
 
-int kprintf(const char *fmt, ...)
-{
+int kprintf(const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 	int written = wvaprintf(kprintf_writter_fn, NULL, fmt, args);

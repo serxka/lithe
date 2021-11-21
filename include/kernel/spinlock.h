@@ -5,9 +5,7 @@
 
 // TODO: fix me up for perf and C11 - PAUSE, C11 Atomics
 
-typedef volatile struct spinlock_s {
-	volatile u32 lock[1];
-} spinlock_t;
+typedef volatile struct spinlock_s { volatile u32 lock[1]; } spinlock_t;
 
 #define spinlock_init(l)         \
 	do {                     \

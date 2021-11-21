@@ -23,8 +23,7 @@ static idt_entry_t idt[256];
 extern void page_fault_isr(void);
 
 static void idt_set_gate(u8 idx, void (*handler)(void), u16 segment, u8 flags,
-			 u8 ist)
-{
+			 u8 ist) {
 	uintptr_t addr = (uintptr_t)handler;
 	idt[idx].offset_lower = addr & 0xFFFF;
 	idt[idx].offset_middle = (addr >> 16) & 0xFFFF;
@@ -35,8 +34,7 @@ static void idt_set_gate(u8 idx, void (*handler)(void), u16 segment, u8 flags,
 	idt[idx]._res0 = 0;
 }
 
-void idt_init(void)
-{
+void idt_init(void) {
 	// Set our IDT pointer, address is linear
 	idt_ptr.limit = sizeof(idt) - 1;
 	idt_ptr.offset = (uintptr_t)&idt;
@@ -50,8 +48,7 @@ void idt_init(void)
 	__asm__ __volatile__("lidt (%0)" : : "r"((uintptr_t)&idt_ptr));
 }
 
-static void dump_regs(interrupt_frame_err_t *frame)
-{
+static void dump_regs(interrupt_frame_err_t *frame) {
 	kprintf("Registers:\r\n"
 		"\trip: %x:[%x] flags: %x\r\n"
 		"\trax: %x rbx: %x rcx: %x rdx: %x\r\n"
@@ -61,8 +58,7 @@ static void dump_regs(interrupt_frame_err_t *frame)
 		frame->rsp);
 }
 
-void page_fault_handler(interrupt_frame_err_t *frame)
-{
+void page_fault_handler(interrupt_frame_err_t *frame) {
 	uintptr_t cr2;
 	__asm__ __volatile__("mov %%cr2, %0" : "=r"(cr2) :);
 	dump_regs(frame);
