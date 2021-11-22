@@ -1,0 +1,3 @@
+TARGET_ARCH = x86_64
+TOOLCHAIN = llvm
+OUTDIR ?= out

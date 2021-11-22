@@ -1,61 +1,42 @@
-SRC = kernel
-INCLUDE = include
+CFLAGS := -std=gnu2x
+CFLAGS += \
+	-g \
+	-O0 \
+	-static
+CFLAGS += \
+	-Wall \
+	-Wextra
 
-ARCH = x86_64
+CFLAGS += \
+	-Isrc
 
-# Programs
-AS = nasm
-CC = clang --target=${ARCH}-none-elf
-LD = ld
-OC = llvm-objcopy
+ASFLAGS = 
 
-# C Compiler Flags
-CFLAGS = -ffreestanding -static -std=gnu11 -nostdlib -O0 -g
-# Arch specific arguments
-CFLAGS += -mno-red-zone -fno-omit-frame-pointer -fno-stack-protector -mno-sse -mno-80387 -mno-mmx -mcmodel=kernel
-# Warnings
-CFLAGS += -Wall -Wextra -Wno-unused-function -Wno-unused-parameter -pedantic
+include build/config.mk
+include build/${TOOLCHAIN}.mk
+include build/${TARGET_ARCH}.mk
 
-# C-preprocessor flags
-CPPFLAGS = -D_KERNEL -D_KERNEL_ARCH=${ARCH} -I${SRC} -I${INCLUDE} -I.
+include src/kernel/build.mk
+include src/lithe/build.mk
 
-# Assembler flags
-ASFLAGS = -felf64
+MKDIR = mkdir -p ${@D}
 
-C_OBJS = $(patsubst %.c,%.o,$(wildcard ${SRC}/*.c))
-C_OBJS += $(patsubst %.c,%.o,$(wildcard ${SRC}/*/*.c))
-C_OBJS += $(patsubst %.c,%.o,$(wildcard ${SRC}/arch/${ARCH}/*.c))
+all: ${ALL}
 
-AS_OBJS = $(patsubst %.asm,%.o,$(wildcard ${SRC}/arch/${ARCH}/*.asm))
-
-all: kernel.32
-
-run: kernel.32
-	qemu-system-x86_64 -kernel $< -smp 1 -m 512m
-
-kernel.64: ${C_OBJS} ${AS_OBJS}
-	${CC} -T ${SRC}/arch/${ARCH}/link.ld ${CFLAGS} -Wl,--build-id=none -o $@ $^
-
-kernel.32: kernel.64
-	${OC} -I elf64-x86-64 -O elf32-i386 $< $@
-
-%.o: %.c
-	${CC} ${CFLAGS} ${CPPFLAGS} -c -MMD -o $@ $<
-
-%.o: %.asm
-	${AS} $(ASFLAGS) -MD -MF ${@:.o=.d} -o $@ $<
-
-C_SRCS := $(shell find . -type f -name '*.h' -or -name '*.c')
-
-dry-format:
-	@clang-format --dry-run -i ${C_SRCS}
-
-format:
-	@clang-format --verbose -i ${C_SRCS}
+run: ${KERNEL}
+	qemu-system-${TARGET_ARCH} \
+		-kernel $< \
+		-no-shutdown \
+		-no-reboot \
+		$(QEMU_ARGS)
 
 clean:
-	rm -f ${C_OBJS} ${C_OBJS:.o=.d}
-	rm -f ${AS_OBJS} ${AS_OBJS:.o=.d}
-	rm -f kernel.32 kernel.64
+	rm -rf ${OUTDIR}
+
+C_SRC := $(shell find src/ -type f -name '*.h' -or -name '*.c')
+dry-format:
+	@clang-format --dry-run -i ${C_SRC}
+format:
+	@clang-format --verbose -i ${C_SRC}
 
 .PHONY = all clean run dry-format format
