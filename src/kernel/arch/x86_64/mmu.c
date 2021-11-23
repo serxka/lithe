@@ -1,6 +1,7 @@
 #include <kernel/kprintf.h>
 #include <lithe/base/defs.h>
 #include <lithe/mem.h>
+#include <lithe/mem/macros.h>
 #include <lithe/sync/spinlock.h>
 
 #include "mmu.h"
@@ -109,13 +110,14 @@ void mmu_init(size_t mem_amount) {
 	// Get the amount of bytes out bitmap takes up
 	size_t frame_bytes = INDEX_FROM_BIT(nframes) * 8;
 	// Round up (8 bytes -- uint64_t) and set out frame pointer
-	frames = (uint64_t *)(((uint64_t)_end + (0x8 - 1)) & ~0x7);
+	frames = (uint64_t *)(ALIGN_UP((uintptr_t)_end, 0x8) +
+			      (uintptr_t)_kernel_vma);
 	// Zero our bitmap
 	memset(frames, 0, frame_bytes);
 
 	// The end of our kernel and free memory after, rounding up
-	uint64_t kernel_end =
-		((uint64_t)_end + frame_bytes + (PAGE_SIZE - 1)) & ~0xFFF;
+	uintptr_t kernel_end =
+		ALIGN_UP((uintptr_t)_end + frame_bytes, PAGE_SIZE);
 
 	// Set all the pages that we need to fit our kernel
 	for (uintptr_t i = 0; i < kernel_end; i += PAGE_SIZE)

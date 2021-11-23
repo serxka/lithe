@@ -33,7 +33,7 @@ ${OUTDIR}/kernel/%.asm.o: src/kernel/%.asm
 # Build our kernel image
 ${KERNEL}: ${KERNEL_OBJS}
 	@${MKDIR}
-	${CC} -T src/kernel/arch/${TARGET_ARCH}/link.ld ${K_CFLAGS} -Wl,--build-id=none -o $@.64 $^
+	${LD} -T src/kernel/arch/${TARGET_ARCH}/link.ld --build-id=none -o $@.64 $^
 	${OC} -I elf64-x86-64 -O elf32-i386 $@.64 $@
 
 # Add the kernel to our list of possible targets
