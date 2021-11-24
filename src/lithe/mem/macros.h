@@ -1,7 +1,7 @@
 #pragma once
 
 #define ALIGN_UP(X, ALIGN) ((X) + ((ALIGN)-1) & ~((ALIGN)-1))
-#define ALIGN_DOWN(X, ALIGN) ((X) ~((ALIGN)-1))
+#define ALIGN_DOWN(X, ALIGN) ((X) & ~((ALIGN)-1))
 
 #define MIN(X, Y)                             \
 	({                                    \
@@ -20,3 +20,8 @@
 		(X) = (Y);          \
 		(Y) = _z;           \
 	} while (0)
+
+// Units to use for memory
+#define KiB(K) (1024ULL * (K))
+#define MiB(M) (KiB(1024ULL * (M)))
+#define GiB(G) (MiB(1024ULL * (G)))

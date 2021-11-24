@@ -1,5 +1,4 @@
-#ifndef _KERNEL_ARCH_X86_64_IRQ_H_
-#define _KERNEL_ARCH_X86_64_IRQ_H_
+#pragma once
 
 #include <lithe/base/defs.h>
 
@@ -23,5 +22,3 @@ typedef struct interrupt_frame_err_s {
 	// Pushed by CPU
 	uint64_t rip, cs, rflags, rsp, ss;
 } PACKED interrupt_frame_err_t;
-
-#endif // _KERNEL_ARCH_X86_64_IRQ_H_

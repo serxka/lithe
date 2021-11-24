@@ -2,7 +2,7 @@
 
 #include <lithe/base/defs.h>
 
-typedef volatile struct spinlock_s { volatile uint32_t lock[1]; } spinlock_t;
+typedef volatile struct { volatile uint32_t lock[1]; } spinlock;
 
 #define spinlock_init(l)         \
 	do {                     \

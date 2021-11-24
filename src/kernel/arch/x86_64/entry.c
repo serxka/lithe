@@ -1,8 +1,10 @@
 #include <kernel/kprintf.h>
 #include <kernel/multiboot.h>
+#include <kernel/vmm.h>
 #include <lithe/base/attributes.h>
 #include <lithe/base/defs.h>
 
+#include "alloc.h"
 #include "mmu.h"
 #include "port.h"
 
@@ -49,7 +51,8 @@ void kentry(uint32_t mb_magic, struct multiboot_info *mb) {
 	early_log_init();
 	multiboot_scan(mb);
 
-	mmu_init(mem_amount);
+	alloc_init(mem_amount);
+	vmm_init();
 	gdt_init();
 	idt_init();
 

@@ -1,134 +1,146 @@
-#include <kernel/kprintf.h>
+#include <kernel/vmm.h>
 #include <lithe/base/defs.h>
+#include <lithe/base/error.h>
+#include <lithe/base/result.h>
 #include <lithe/mem.h>
-#include <lithe/mem/macros.h>
 #include <lithe/sync/spinlock.h>
 
+#include "alloc.h"
 #include "mmu.h"
 
-#define PAGE_SHIFT (12)
-#define PAGE_SIZE (0x1 << PAGE_SHIFT)
-#define PAGE_MASK 0x1FFF
-
-#define LARGE_PAGE_SIZE (0x1 << 21) /*2MiB*/
-
-#define PAGE_KERNEL_FLAG 0x03
-#define PAGE_SIZE_FLAG 0x80
-
-#define INDEX_FROM_BIT(x) ((x) >> 6)
-#define OFFSET_FROM_BIT(x) ((x)&0x3F)
-
-uint64_t *frames;
-uint32_t nframes;
-
-static void mmu_frame_set(uintptr_t addr) {
-	uint32_t frame = addr >> PAGE_SHIFT;
-	uint32_t idx = INDEX_FROM_BIT(frame);
-	uint32_t off = OFFSET_FROM_BIT(frame);
-	frames[idx] |= (0x1 << off);
-}
-
-static void mmu_frame_clear(uintptr_t addr) {
-	uint32_t frame = addr >> PAGE_SHIFT;
-	uint32_t idx = INDEX_FROM_BIT(frame);
-	uint32_t off = OFFSET_FROM_BIT(frame);
-	frames[idx] &= ~(0x1 << off);
-}
-
-static bool mmu_frame_test(uintptr_t addr) {
-	uint32_t frame = addr >> PAGE_SHIFT;
-	uint32_t idx = INDEX_FROM_BIT(frame);
-	uint32_t off = OFFSET_FROM_BIT(frame);
-	return frames[idx] & (0x1 << off);
-}
-
-static uint32_t mmu_first_frame(void) {
-	for (uint32_t i = 0; i < INDEX_FROM_BIT(nframes); ++i) {
-		if (frames[i] != (uint64_t)-1) {
-			for (uint32_t b = 0; b < 64; ++b) {
-				if (!(frames[i] & (0x1 << b)))
-					return (i + b) << PAGE_SHIFT;
-			}
-		}
-	}
-	panic("failed to alloc a frame", 1);
-	return (uint32_t)-1;
-}
+#define PMLN_IDX(ADDR, LVL)                                 \
+	({                                                  \
+		uint64_t _a = (uint64_t)(ADDR);             \
+		uint64_t _s = (LVL)*9 + 12;                 \
+		(_a & (uint64_t)MEM_PAGE_MASK << _s) >> _s; \
+	})
 
 extern symbol_t _kernel_vma;
 extern symbol_t _end;
 
-#define __pagetable __attribute((aligned(PAGE_SIZE)))
-static pml_t pml4[512] __pagetable;
-static pml_t pdpt_ident[512] __pagetable;
-static pml_t pdpt_kernl[512] __pagetable;
-static pml_t pd_2mb[2][512] __pagetable;
+static spinlock mmu_lock = {0};
+static addr_space current_space;
+static addr_space kernel_space;
 
-static uint8_t *heap_start;
-static spinlock_t frame_alloc_lock = {0};
-static phys_t current_tree;
-
-phys_t mmu_kernel2phys(logi_t addr) {
-	return addr - (phys_t)_kernel_vma;
+static pm_addr kern2phys_addr(vm_addr addr) {
+	return (vm_addr)_kernel_vma - addr;
 }
 
-void mmu_init(size_t mem_amount) {
-	// Initialise our memory locks
-	spinlock_init(frame_alloc_lock);
+void vmm_init(void) {
+	spinlock_init(mmu_lock);
 
-	// Map our kernel pml4 to 0gb (ident) and -512gb (kerenl)
-	pml4[0].raw = mmu_kernel2phys((uintptr_t)pdpt_ident) | PAGE_KERNEL_FLAG;
-	pml4[511].raw =
-		mmu_kernel2phys((uintptr_t)pdpt_kernl) | PAGE_KERNEL_FLAG;
+	// Create our address space
+	kernel_space = unwrap$(vmm_create_space());
 
-	// Start our identity mapping at 0gb
-	pdpt_ident[0].raw =
-		mmu_kernel2phys((uintptr_t)&pd_2mb[0]) | PAGE_KERNEL_FLAG;
-	pdpt_ident[1].raw =
-		mmu_kernel2phys((uintptr_t)&pd_2mb[1]) | PAGE_KERNEL_FLAG;
-	// and our kernel at -2gb (kernel memory model)
-	pdpt_kernl[510].raw =
-		mmu_kernel2phys((uintptr_t)&pd_2mb[0]) | PAGE_KERNEL_FLAG;
-	pdpt_kernl[511].raw =
-		mmu_kernel2phys((uintptr_t)&pd_2mb[1]) | PAGE_KERNEL_FLAG;
+	// Identity map our kernel
+	vm_range virt_range = range$(vm_range, 0x0, GiB(2));
+	pm_range phys_range = range$(pm_range, 0x0, GiB(2));
+	unwrap$(vmm_map(kernel_space, virt_range, phys_range, 0));
 
-	// Go through and map all of our 2mb pages from 0-2gb
-	for (uint32_t i = 0; i < 512; ++i) {
-		pd_2mb[0][i].raw = (0x00000000 + i * LARGE_PAGE_SIZE) |
-				   PAGE_SIZE_FLAG | PAGE_KERNEL_FLAG;
-		pd_2mb[1][i].raw = (0x40000000 + i * LARGE_PAGE_SIZE) |
-				   PAGE_SIZE_FLAG | PAGE_KERNEL_FLAG;
+	// Map the upper -2GiB
+	virt_range = (vm_range){(~(size_t)0) - GiB(2), GiB(2)};
+	unwrap$(vmm_map(kernel_space, virt_range, phys_range, 0));
+
+	// Switch to new paging
+	vmm_switch_space(kernel_space);
+}
+
+space_result vmm_create_space(void) {
+	addr_space addr = (addr_space)try$(space_result, alloc_first_frame());
+	memset(addr, 0, MEM_PAGE_SIZE);
+	return OK(space_result, addr);
+}
+
+addr_space vmm_kernel_space(void) {
+	return (addr_space)kern2phys_addr((vm_addr)kernel_space);
+}
+
+addr_result vmm_virt2phys(addr_space space, vm_addr addr) {
+	UNUSED(space), UNUSED(addr);
+	panic("function not implemented %s", "vmm_virt2phys");
+	return OK(addr_result, 0);
+}
+
+void vmm_destroy_space(addr_space space) {
+	UNUSED(space);
+	panic("function not implemented %s", "vmm_destroy_space");
+}
+
+void vmm_switch_space(addr_space space) {
+	current_space = space;
+	pm_addr cr3 = kern2phys_addr((vm_addr)current_space);
+	__asm__ __volatile__("mov %0, %%cr3" ::"r"(cr3));
+}
+
+static addr_result vmm_get_pml_alloc(pml_table *table, size_t idx,
+				     uint32_t flags) {
+	if (table->entries[idx].present) {
+		return OK(addr_result,
+			  table->entries[idx].phys << MEM_PAGE_SHIFT);
+	} else {
+		pm_addr addr = try$(addr_result, alloc_first_frame()) >> 12;
+		memset((void *)addr, 0, MEM_PAGE_SIZE);
+		table->entries[idx] = pml_new(addr, flags);
+		return OK(addr_result, addr);
+	}
+}
+
+static addr_result vmm_map_page(addr_space addr, vm_addr virt, pm_addr phys,
+				uint32_t mem_flags) {
+	// Navigate tables and allocated them if required
+	pml_table *pml4 = (pml_table *)addr;
+	pml_table *pml3 = (pml_table *)try$(
+		addr_result,
+		vmm_get_pml_alloc(pml4, PMLN_IDX(virt, 3),
+				  mem_flags | MEM_WRITABLE | MEM_USER));
+	pml_table *pml2 = (pml_table *)try$(
+		addr_result,
+		vmm_get_pml_alloc(pml3, PMLN_IDX(virt, 2),
+				  mem_flags | MEM_WRITABLE | MEM_USER));
+	pml_table *pml1 = (pml_table *)try$(
+		addr_result,
+		vmm_get_pml_alloc(pml2, PMLN_IDX(virt, 1),
+				  mem_flags | MEM_WRITABLE | MEM_USER));
+	pml *page = pml1->entries + PMLN_IDX(virt, 0);
+
+	if (page->present)
+		panic("page %x is already mapped to %x\r\n", virt, page->phys);
+
+	*page = pml_new(phys, mem_flags);
+
+	return OK(addr_result, virt);
+}
+
+maybe vmm_map(addr_space space, vm_range virt_range, pm_range phys_range,
+	      uint32_t mem_flags) {
+	// assert_true(range_is_page_aligned(virt_range));
+	// assert_true(range_is_page_aligned(phys_range));
+	spinlock_take(mmu_lock);
+
+	if (virt_range.size != phys_range.size) {
+		panic("virt_range.size and phys_range.size must be the same. '%x' != '%x'",
+		      virt_range.size, phys_range.size);
+		return FAILURE(ERR_BAD_PARAMETERS);
+	}
+	// later on split this up into bigger page chunks (2mb) rather then lots
+	// of smaller pages
+	for (size_t i = 0; i < (virt_range.size / MEM_PAGE_SIZE); ++i) {
+		addr_result res = vmm_map_page(
+			space,
+			ALIGN_DOWN(virt_range.base, MEM_PAGE_SIZE) +
+				i * MEM_PAGE_SIZE,
+			ALIGN_DOWN(phys_range.base, MEM_PAGE_SIZE) +
+				i * MEM_PAGE_SIZE,
+			mem_flags);
+		if (res.fail)
+			return FAILURE(res.err);
 	}
 
-	// Load a pointer to our plm4 into cr3
-	__asm__ __volatile__("movq %0, %%cr3"
-			     :
-			     : "r"(mmu_kernel2phys((uintptr_t)pml4)));
-
-	// Set the amount pages of usable memory in the system
-	nframes = mem_amount >> PAGE_SHIFT;
-	// Get the amount of bytes out bitmap takes up
-	size_t frame_bytes = INDEX_FROM_BIT(nframes) * 8;
-	// Round up (8 bytes -- uint64_t) and set out frame pointer
-	frames = (uint64_t *)(ALIGN_UP((uintptr_t)_end, 0x8) +
-			      (uintptr_t)_kernel_vma);
-	// Zero our bitmap
-	memset(frames, 0, frame_bytes);
-
-	// The end of our kernel and free memory after, rounding up
-	uintptr_t kernel_end =
-		ALIGN_UP((uintptr_t)_end + frame_bytes, PAGE_SIZE);
-
-	// Set all the pages that we need to fit our kernel
-	for (uintptr_t i = 0; i < kernel_end; i += PAGE_SIZE)
-		mmu_frame_set(i);
-
-	kprintf("%x, %x\r\n", mmu_first_frame(), mmu_first_frame());
-
-	heap_start = (uint8_t *)kernel_end;
+	spinlock_give(mmu_lock);
+	return SUCCESS;
 }
 
-void mmu_switch_tree(phys_t addr) {
-	current_tree = addr;
-	__asm__ __volatile__("mov %0, %%cr3" ::"r"(current_tree));
+void vmm_unmap(addr_space space, vm_range range) {
+	panic("function not implemented %s", "vmm_unmap");
+	UNUSED(space), UNUSED(range);
 }

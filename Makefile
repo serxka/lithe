@@ -26,6 +26,7 @@ all: ${ALL}
 run: ${KERNEL}
 	qemu-system-${TARGET_ARCH} \
 		-kernel $< \
+		-no-shutdown \
 		$(QEMU_ARGS)
 
 clean:
