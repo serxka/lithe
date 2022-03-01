@@ -12,7 +12,6 @@ typedef enum {
 	ERR_KIND_INVALID,
 	ERR_KIND_UNSUPPORTED,
 	ERR_KIND_EXHAUSTION,
-
 } error_kind;
 
 typedef struct {
@@ -26,6 +25,7 @@ typedef struct {
 #define ERR_PERMISSION BUILD_ERROR(ERR_KIND_PERMS, "lacking permission")
 #define ERR_BAD_PARAMETERS BUILD_ERROR(ERR_KIND_INVALID, "bad parameters")
 #define ERR_BAD_DATA BUILD_ERROR(ERR_KIND_INVALID, "bad data")
+#define ERR_BAD_ADDRESS BUILD_ERROR(ERR_KIND_INVALID, "bad address")
 #define ERR_OUT_OF_MEMORY BUILD_ERROR(ERR_KIND_EXHAUSTION, "out of memory")
 
 // A type for void returning results

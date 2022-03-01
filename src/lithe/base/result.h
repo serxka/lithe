@@ -30,6 +30,7 @@
 			panic("unwrap on " #EXPR " failed: (\"%s\")", (msg)); \
 		_expr.ok;                                                     \
 	})
+
 #define unwrap$(EXPR) expect$(EXPR, "no message")
 #define unwrap_or$(EXPR, v)                  \
 	({                                   \

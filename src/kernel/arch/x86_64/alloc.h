@@ -4,7 +4,7 @@
 #include <lithe/base/error.h>
 #include <lithe/base/result.h>
 
-typedef result(uint64_t, error) alloc_result;
+typedef result(uintptr_t, error) alloc_result;
 
 void alloc_init(uint64_t mem_available);
 void alloc_frame_set(uint64_t addr);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/vmm.h>
+#include <kernel/vm.h>
 #include <lithe/base/attributes.h>
 #include <lithe/base/defs.h>
 #include <lithe/base/range.h>
@@ -13,23 +13,22 @@
 #define MEM_PAGE_SIZE_MED (0x1 << MEM_PAGE_SHIFT_MED)
 #define MEM_PAGE_SIZE_BIG (0x1 << MEM_PAGE_SHIFT_BIG)
 
-#define MEM_PAGE_MASK (0x1FFF)
+#define MEM_PAGE_MASK (0x1FF)
 
 typedef union {
 	struct {
-		uint64_t present : 1;
-		uint64_t writable : 1;
-		uint64_t user : 1;
-		uint64_t writethrough : 1;
-		uint64_t nocache : 1;
-		uint64_t accessed : 1;
-		uint64_t dirty : 1;
-		uint64_t size : 1;
-		uint64_t global : 1;
+		bool present : 1;
+		bool writable : 1;
+		bool user : 1;
+		bool writethrough : 1;
+		bool nocache : 1;
+		bool accessed : 1;
+		bool dirty : 1;
+		bool size : 1;
+		bool global : 1;
 		uint64_t _i : 3;
-		uint64_t pat : 1;
-		uint64_t phys : 50;
-		uint64_t xd : 1;
+		uint64_t phys : 51;
+		bool xd : 1;
 	};
 	uint64_t _raw;
 } pml;
@@ -37,20 +36,23 @@ static_assert(sizeof(pml) == 8, "pml was not 64-bits");
 
 static inline pml pml_new(pm_addr addr, uint32_t flags) {
 	return (pml){
-		.present = 1,
-		.writable = flags & MEM_WRITABLE ? 1 : 0,
-		.user = flags * MEM_USER ? 1 : 0,
-		.phys = addr >> MEM_PAGE_SHIFT,
-		.writethrough = 0,
-		.nocache = 0,
-		.accessed = 0,
-		.dirty = 0,
-		.size = 0,
-		.global = 0,
-		._i = 0,
-		.pat = 0,
-		.xd = 0,
+	        .present = true,
+	        .writable = flags & MEM_WRITABLE ? true : false,
+	        .user = flags & MEM_USER ? true : false,
+	        .writethrough = false,
+	        .nocache = false,
+	        .accessed = false,
+	        .dirty = false,
+	        .size = false,
+	        .global = false,
+	        .phys = addr >> MEM_PAGE_SHIFT,
+	        .xd = false,
+	        ._i = 0,
 	};
+}
+
+static inline pml pml_empty(void) {
+	return (pml){0};
 }
 
 typedef struct {

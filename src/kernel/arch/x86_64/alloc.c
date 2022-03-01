@@ -15,9 +15,9 @@ extern symbol_t _end;
 #define OFFSET_FROM_BIT(x) ((x)&0x3F)
 
 static spinlock frame_alloc_lock = {0};
-static uint64_t *frames;
+static uint64_t* frames;
 static uint32_t nframes;
-static uint8_t *heap_start;
+static uint8_t* heap_start;
 
 void alloc_init(uint64_t mem_available) {
 	// Initialise our memory locks
@@ -28,23 +28,20 @@ void alloc_init(uint64_t mem_available) {
 	// Get the amount of bytes out bitmap takes up
 	size_t frame_bytes = INDEX_FROM_BIT(nframes) * 8;
 	// Round up (8 bytes -- uint64_t) and set our frame pointer
-	frames = (uint64_t *)(ALIGN_UP((uint64_t)_end, 0x8) +
-			      (uint64_t)_kernel_vma);
+	frames = (uint64_t*)(ALIGN_UP((uint64_t)_end, 0x8)
+	                     + (uint64_t)_kernel_vma);
 	// Zero our bitmap
 	memset(frames, 0, frame_bytes);
 
 	// The end of our kernel and free memory after, rounding up
 	uint64_t kernel_end =
-		ALIGN_UP((uint64_t)_end + frame_bytes, MEM_PAGE_SIZE);
-
-	kprintf("nframes: %d, frames: %x kernel_end: %x\r\n", nframes, frames,
-		kernel_end);
+	        ALIGN_UP((uint64_t)_end + frame_bytes, MEM_PAGE_SIZE);
 
 	// Set all the pages that we need to fit our kernel
 	for (uint64_t i = 0; i < kernel_end; i += 0x1000)
 		alloc_frame_set(i);
 
-	heap_start = (uint8_t *)kernel_end;
+	heap_start = (uint8_t*)kernel_end;
 }
 
 void alloc_frame_set(uint64_t addr) {
@@ -78,7 +75,7 @@ alloc_result alloc_first_frame(void) {
 			// Skip is page is set
 			if (frames[i] & (0x1 << b))
 				continue;
-			uint64_t addr = (i * 64 + b) << MEM_PAGE_SHIFT;
+			uintptr_t addr = (i * 64 + b) << MEM_PAGE_SHIFT;
 			alloc_frame_set(addr);
 			return OK(alloc_result, addr);
 		}

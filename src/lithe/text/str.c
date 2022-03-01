@@ -2,10 +2,10 @@
 #include <lithe/mem/mem.h>
 #include <lithe/text/str.h>
 
-str str_dup(str const s, allocator *alloc) {
+str str_dup(str const s, allocator* alloc) {
 	if (is_nullstr(s))
 		return str$("");
-	char *buf = (char *)alloc_malloc(alloc, s.len);
+	char* buf = (char*)alloc_malloc(alloc, s.len);
 	memcpy(buf, s.buf, s.len);
 	return str_n$(s.len, buf);
 }

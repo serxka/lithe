@@ -4,7 +4,7 @@
 #include <lithe/base/defs.h>
 
 // Gets the length of a cstr
-static inline size_t cstr_len(const char *s) {
+static inline size_t cstr_len(const char* s) {
 	size_t l = 0;
 	while (s[l++])
 		;
@@ -14,7 +14,7 @@ static inline size_t cstr_len(const char *s) {
 // A string which does not own its data
 typedef struct {
 	size_t len;
-	const char *buf;
+	const char* buf;
 } str;
 
 // String using a flexible array member
@@ -26,14 +26,14 @@ typedef struct {
 static inline str str_forward(str s) {
 	return s;
 }
-static inline str str_from_string(string *s) {
+static inline str str_from_string(string* s) {
 	return (str){s->len, s->buf};
 }
-static inline str str_from_cstr(const char *cstr) {
+static inline str str_from_cstr(const char* cstr) {
 	return (str){cstr_len(cstr), cstr};
 }
-static inline str str_from_cstr8(const uint8_t *cstr) {
-	return (str){cstr_len((const char *)cstr), (const char *)cstr};
+static inline str str_from_cstr8(const uint8_t* cstr) {
+	return (str){cstr_len((const char*)cstr), (const char*)cstr};
 }
 
 // Creates a new `str` from possible string types
@@ -55,5 +55,5 @@ static inline str str_from_cstr8(const uint8_t *cstr) {
 
 #define nullstr (str$(""))
 #define is_nullstr(s) (s.len == 0)
-str str_dup(str const s, allocator *alloc);
+str str_dup(str const s, allocator* alloc);
 bool str_equ(str const s1, str const s2);

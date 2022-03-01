@@ -8,7 +8,7 @@ KERNEL_SRCS := \
 	$(wildcard src/kernel/arch/${TARGET_ARCH}/*.asm) \
 	$(wildcard src/lithe/*/*.c) \
 	$(wildcard src/lithe/*.c)
-	
+
 # Pattern substitute them into objects out of tree
 KERNEL_OBJS := $(patsubst src/%, ${OUTDIR}/%.o, ${KERNEL_SRCS})
 

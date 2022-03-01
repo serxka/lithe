@@ -15,7 +15,7 @@
 #error "unsupported compiler"
 #endif
 
-#define null ((void *)0)
+#define null ((void*)0)
 #define static_assert _Static_assert
 
 typedef char symbol_t[];
