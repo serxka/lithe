@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/vm.h>
+#include <kernel/vmm.h>
 #include <lithe/base/attributes.h>
 #include <lithe/base/defs.h>
 #include <lithe/base/range.h>

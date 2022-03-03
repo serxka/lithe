@@ -26,3 +26,8 @@ int kprintf(const char* fmt, ...);
 			__asm__ __volatile__("hlt");                   \
 		}                                                      \
 	} while (0)
+
+static inline noreturn void unreachable(void) {
+	for (;;)
+		;
+}

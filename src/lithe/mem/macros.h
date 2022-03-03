@@ -3,6 +3,8 @@
 #define ALIGN_UP(X, ALIGN) ((X) + ((ALIGN)-1) & ~((ALIGN)-1))
 #define ALIGN_DOWN(X, ALIGN) ((X) & ~((ALIGN)-1))
 
+#define LENGTH(X) (sizeof(X) / sizeof((X)[0]))
+
 #define MIN(X, Y)                             \
 	({                                    \
 		typeof(X) _x = (X), _y = (Y); \

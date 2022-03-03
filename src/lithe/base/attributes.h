@@ -4,3 +4,4 @@
 #define DEFER(func) __attribute__((cleanup(func)))
 #define PACKED __attribute__((packed))
 #define UNUSED(expr) ((void)(expr))
+#define INLINE inline __attribute__((always_inline))

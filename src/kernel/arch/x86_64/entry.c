@@ -1,22 +1,25 @@
 #include <kernel/kprintf.h>
 #include <kernel/multiboot.h>
-#include <kernel/vm.h>
+#include <kernel/vmm.h>
 #include <lithe/base/attributes.h>
 #include <lithe/base/defs.h>
+#include <lithe/mem.h>
 
 #include "alloc.h"
+#include "asm.h"
+#include "context.h"
 #include "mmu.h"
-#include "port.h"
+#include "syscall.h"
 
 static size_t early_log_writter(uint8_t* buf, size_t len) {
 #define EARLY_LOG_PORT (0x3F8) /* COM1 */
 	for (uint32_t i = 0; i < len; ++i)
-		port_outb(EARLY_LOG_PORT, buf[i]);
+		asm_outb(EARLY_LOG_PORT, buf[i]);
 	return len;
 }
 
 static void early_log_init(void) {
-	kprintf_writter = &early_log_writter;
+	kprintf_writter = early_log_writter;
 }
 
 // The amount of memory in the system
@@ -44,6 +47,7 @@ void multiboot_scan(struct multiboot_info* mb) {
 // Because at this point header files for a single function is dumb
 void gdt_init(void);
 void idt_init(void);
+void pic_init(void);
 
 void kentry(uint32_t mb_magic, struct multiboot_info* mb) {
 	UNUSED(mb_magic);
@@ -55,15 +59,29 @@ void kentry(uint32_t mb_magic, struct multiboot_info* mb) {
 	vmm_init();
 	gdt_init();
 	idt_init();
+	syscall_init();
+	pic_init();
 
-	kprintf("hello world!\r\n");
+	asm_sti();
 
-	// Test page fault handler
-	volatile uint8_t* ptr = (uint8_t*)0xdeadbeef;
-	*ptr;
+	extern symbol_t _usermode;
+	extern symbol_t _end;
+	extern symbol_t _kernel_vma;
 
+	vmm_set_flags(vmm_kernel_space(),
+	              range$(vm_range,
+	                     (vm_addr)_usermode + (vm_addr)_kernel_vma,
+	                     ALIGN_UP((vm_addr)_end - (vm_addr)_usermode,
+	                              MEM_PAGE_SIZE)),
+	              MEM_WRITABLE | MEM_USER);
+
+	context_t ctx = syscall_get_new_context();
+	syscall_gs_base((uintptr_t)&ctx);
+	sysret_enter_usermode(ctx.regs.rip, ctx.regs.rsp);
+
+	// // Test page fault handler
+	*(volatile uint8_t*)0xdeadbeef;
 loop:
-	__asm__ __volatile__("cli");
-	__asm__ __volatile__("hlt");
+	halt();
 	goto loop;
 }

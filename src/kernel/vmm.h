@@ -19,11 +19,14 @@ typedef result(uintptr_t, error) addr_result;
 typedef result(addr_space, error) space_result;
 
 void vmm_init(void);
-space_result vmm_create_space(void);
+space_result vmm_new_userspace(void);
 addr_space vmm_kernel_space(void);
 addr_result vmm_virt2phys(addr_space space, vm_addr addr);
 void vmm_destroy_space(addr_space space);
 void vmm_switch_space(addr_space space);
 maybe vmm_map(addr_space space, vm_range virt_range, pm_range phys_range,
               uint32_t mem_flags);
+maybe vmm_set_flags(addr_space space, vm_range range, uint32_t mem_flags);
+maybe vmm_alloc_range(addr_space space, vm_range virt_range,
+                      uint32_t mem_flags);
 void vmm_unmap(addr_space space, vm_range range);

@@ -37,6 +37,13 @@ SECTIONS
 		_stack_bottom_phys = _stack_bottom - _kernel_vma;
 	}
 
+	.usermode ALIGN(4K) : AT (ADDR (.usermode) - _kernel_vma)
+	{
+		_usermode = . - _kernel_vma;
+		*(.usermode)
+		*(.usermode_bss)
+	}
+
 	_end = . - _kernel_vma;
 	
 	/DISCARD/ :

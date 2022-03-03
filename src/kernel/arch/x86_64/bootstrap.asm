@@ -24,7 +24,7 @@ _start:
 
 	mov ecx, 0xC000_0080      ; Read from the EFER MSR
 	rdmsr
-	or eax, 1 << 11 | 1 << 8  ; Set LME and NXE bits
+	or eax, 1 << 11 | 1 << 8 | 1 << 0 ; Set LME and NXE bits and SCE bits
 	wrmsr
 
 	mov eax, cr0              ; Enable Paging

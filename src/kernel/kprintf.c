@@ -2,7 +2,7 @@
 #include <lithe/base/attributes.h>
 #include <lithe/base/defs.h>
 
-size_t (*kprintf_writter)(uint8_t*, size_t) = NULL;
+size_t (*kprintf_writter)(uint8_t*, size_t);
 
 #define PUTC(c)                   \
 	do {                      \
@@ -123,7 +123,7 @@ size_t wvaprintf(int (*writter)(void*, char), void* data, const char* fmt,
 	return written;
 }
 
-typedef struct snwritter_s {
+typedef struct {
 	char* str;
 	size_t size; // Size of str
 	size_t len;  // Amount we have written

@@ -10,7 +10,7 @@ CFLAGS += \
 CFLAGS += \
 	-Isrc
 
-ASFLAGS = 
+ASFLAGS = -g
 
 include build/config.mk
 include build/${TOOLCHAIN}.mk
@@ -28,6 +28,17 @@ run: ${KERNEL}
 		-kernel $< \
 		-no-shutdown \
 		$(QEMU_ARGS)
+
+run-debug: ${KERNEL}
+	qemu-system-${TARGET_ARCH} \
+		-kernel $< \
+		-no-reboot \
+		-no-shutdown \
+		-s -S \
+		$(QEMU_ARGS)
+
+gdb:
+	gdb --command=".gdb_connect"
 
 clean:
 	rm -rf ${OUTDIR}
