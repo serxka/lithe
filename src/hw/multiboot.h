@@ -94,7 +94,7 @@ static void multiboot_scan(struct multiboot_info* mb, uint64_t* mem_amount,
 
 	// Find the highest location of multiboot modules
 	if (mb->flags & MULTIBOOT_INFO_MODS && mem_highest_free != null) {
-		mboot_mods_t* mods = (mboot_mods_t*)mb->mods_addr;
+		mboot_mods_t* mods = (mboot_mods_t*)(uint64_t)mb->mods_addr;
 		for (uint32_t i = 0; i < mb->mods_count; ++i) {
 			uint64_t addr = mods[i].mod_start + mods[i].mod_end;
 			if (addr > *mem_highest_free)

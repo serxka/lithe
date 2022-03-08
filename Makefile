@@ -19,6 +19,7 @@ include build/${TARGET_ARCH}.mk
 
 include src/kernel/build.mk
 include src/utils/build.mk
+include src/hw/build.mk
 
 MKDIR = mkdir -p ${@D}
 
