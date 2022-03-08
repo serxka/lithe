@@ -1,8 +1,8 @@
 #include <kernel/kprintf.h>
-#include <lithe/base/defs.h>
+#include <utils/base/defs.h>
 
-#include "asm.h"
-#include "context.h"
+#include <kernel/arch/x86_64/asm.h>
+#include <kernel/arch/x86_64/context.h>
 
 void syscall_entry(void);
 
@@ -25,10 +25,13 @@ int syscall_handler(regs_t const* regs) {
 }
 
 uint64_t __attribute__((section(".usermode_bss"))) ALIGNED(16) user_stack[32];
-void __attribute__((section(".usermode"))) user_function(void) {
+noreturn void __attribute__((section(".usermode"))) user_function(void) {
+	// Make another system call
 	__asm__ __volatile__("syscall" : : "a"(0x69));
-	register uint64_t a asm("rax");
-	a = 0xdeadbeefdeadbeef;
+
+	// Test the page fault handler
+	*(volatile uint8_t*)0xdeadbeef;
+
 	for (;;)
 		;
 }

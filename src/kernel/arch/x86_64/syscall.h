@@ -1,8 +1,8 @@
 #pragma once
 
-#include <lithe/base/defs.h>
+#include <utils/base/defs.h>
 
-#include "context.h"
+#include <kernel/arch/x86_64/context.h>
 
 void syscall_init(void);
 void syscall_gs_base(uintptr_t addr);

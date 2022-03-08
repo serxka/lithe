@@ -1,7 +1,7 @@
 #pragma once
 
-#include <lithe/base/attributes.h>
-#include <lithe/base/defs.h>
+#include <utils/base/attributes.h>
+#include <utils/base/defs.h>
 
 typedef struct {
 	// Pushed by stub
@@ -24,7 +24,7 @@ typedef struct {
 	uint64_t rip, cs, rflags, rsp, ss;
 } PACKED interrupt_frame_err_t;
 
-extern void double_fault_isr(void);
-extern void gp_fault_isr(void);
-extern void page_fault_isr(void);
-extern void timer_irq(void);
+void double_fault_isr(void);
+void gp_fault_isr(void);
+void page_fault_isr(void);
+void timer_irq(void);

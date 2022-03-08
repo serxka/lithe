@@ -1,9 +1,9 @@
 #pragma once
 
 #include <kernel/vmm.h>
-#include <lithe/base/attributes.h>
-#include <lithe/base/defs.h>
-#include <lithe/base/range.h>
+#include <utils/base/attributes.h>
+#include <utils/base/defs.h>
+#include <utils/base/range.h>
 
 #define MEM_PAGE_SHIFT (12)
 #define MEM_PAGE_SHIFT_MED (21)
@@ -31,11 +31,11 @@ typedef union {
 		bool xd : 1;
 	};
 	uint64_t _raw;
-} pml;
-static_assert(sizeof(pml) == 8, "pml was not 64-bits");
+} pml_t;
+static_assert(sizeof(pml_t) == 8, "pml_t was not 64-bits");
 
-static inline pml pml_new(pm_addr addr, uint32_t flags) {
-	return (pml){
+static inline pml_t pml_new(pm_addr_t addr, uint32_t flags) {
+	return (pml_t){
 	        .present = true,
 	        .writable = flags & MEM_WRITABLE ? true : false,
 	        .user = flags & MEM_USER ? true : false,
@@ -51,10 +51,10 @@ static inline pml pml_new(pm_addr addr, uint32_t flags) {
 	};
 }
 
-static inline pml pml_empty(void) {
-	return (pml){0};
+static inline pml_t pml_empty(void) {
+	return (pml_t){0};
 }
 
 typedef struct {
-	pml entries[512];
-} ALIGNED(MEM_PAGE_SIZE) pml_table;
+	pml_t entries[512];
+} ALIGNED(MEM_PAGE_SIZE) pml_table_t;

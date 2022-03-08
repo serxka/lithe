@@ -1,6 +1,9 @@
+#include <kernel/arch.h>
 #include <kernel/kprintf.h>
-#include <lithe/base/attributes.h>
-#include <lithe/base/defs.h>
+#include <utils/assert/assert.h>
+#include <utils/assert/panic.h>
+#include <utils/base/attributes.h>
+#include <utils/base/defs.h>
 
 size_t (*kprintf_writter)(uint8_t*, size_t);
 
@@ -157,4 +160,25 @@ int kprintf(const char* fmt, ...) {
 	va_end(args);
 
 	return written;
+}
+
+noreturn void _panic(src_location_t loc, const char* fmt, ...) {
+	kprintf("[ PANIC ] @ %s:%d %s() ", loc.file.buf, loc.line,
+	        loc.func.buf);
+	va_list args;
+	va_start(args, fmt);
+	wvaprintf(kprintf_writter_fn, NULL, fmt, args);
+	va_end(args);
+
+	arch_halt();
+}
+
+void _assert(src_location_t loc, bool res, char* expr, str_t msg) {
+	if (!res)
+		return;
+	kprintf("Assertion failed: (%s), \"%s\". Function %s, File %s, Line "
+	        "%d\r\n",
+	        expr, msg.buf, loc.func.buf, loc.file.buf, loc.line);
+
+	arch_halt();
 }

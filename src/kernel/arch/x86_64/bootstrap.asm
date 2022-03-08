@@ -3,7 +3,7 @@ section .boot
 
 [extern _stack_bottom]
 [extern _stack_bottom_phys]
-[extern kentry]
+[extern arch_kentry]
 [extern _long_mode]
 [global _start]
 
@@ -94,4 +94,4 @@ _long_mode:
 	pop rsi                   ; Multiboot Pointer
 	mov rsp, _stack_bottom    ; Set out higher half stack pointer
 
-	call kentry               ; Jump into our higher half 64-bit kernel entry
+	call arch_kentry          ; Jump into our higher half 64-bit kernel entry

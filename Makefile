@@ -8,7 +8,8 @@ CFLAGS += \
 	-Wextra
 
 CFLAGS += \
-	-Isrc
+	-Isrc \
+	-DDEBUG
 
 ASFLAGS = -g
 
@@ -17,11 +18,11 @@ include build/${TOOLCHAIN}.mk
 include build/${TARGET_ARCH}.mk
 
 include src/kernel/build.mk
-include src/lithe/build.mk
+include src/utils/build.mk
 
 MKDIR = mkdir -p ${@D}
 
-all: ${ALL}
+all: ${TARGETS}
 
 run: ${KERNEL}
 	qemu-system-${TARGET_ARCH} \
@@ -44,9 +45,9 @@ clean:
 	rm -rf ${OUTDIR}
 
 C_SRC := $(shell find src/ -type f -name '*.h' -or -name '*.c')
-dry-format:
+fmt-dry:
 	@clang-format --dry-run -i ${C_SRC}
-format:
+fmt:
 	@clang-format --verbose -i ${C_SRC}
 
-.PHONY = all clean run dry-format format
+.PHONY += all run run-debug gdb clean fmt-dry fmt

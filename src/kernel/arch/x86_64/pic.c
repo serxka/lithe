@@ -1,8 +1,9 @@
 #include <kernel/kprintf.h>
-#include <lithe/base/defs.h>
+#include <utils/base/defs.h>
 
-#include "asm.h"
-#include "isr.h"
+#include <kernel/arch/x86_64/asm.h>
+#include <kernel/arch/x86_64/isr.h>
+#include <kernel/arch/x86_64/pic.h>
 
 #define PIC1_CMD 0x20
 #define PIC2_CMD 0xA0
@@ -33,7 +34,7 @@ static void pit_init(void) {
 	asm_outb(0x40, divisor & 0xFF);
 	asm_outb(0x40, divisor >> 8);
 	// enable pit
-	pic_clearmask(0);
+	// pic_clearmask(0);
 }
 
 void pic_init(void) {
@@ -50,7 +51,7 @@ void pic_init(void) {
 	asm_outb(PIC2_DATA, 0xFF);
 
 	// init the PIT
-	// pit_init();
+	pit_init();
 }
 
 void pic_setmask(uint8_t irqline) {

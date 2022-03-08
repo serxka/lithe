@@ -1,7 +1,32 @@
 #pragma once
 
-#include <lithe/base/defs.h>
-#include <lithe/base/attributes.h>
+#include <utils/base/attributes.h>
+#include <utils/base/defs.h>
+
+#define _ASM_OP(op)                         \
+	static INLINE void asm_##op(void) { \
+		__asm__ __volatile__(#op);  \
+	}
+#define _ASM_MAKE_CRX(X)                                                \
+	static INLINE uint64_t asm_read_cr##X(void) {                   \
+		uint64_t v;                                             \
+		__asm__ __volatile__("mov %%cr" #X ", %0" : "=r"(v) :); \
+		return v;                                               \
+	}                                                               \
+	static INLINE void asm_write_cr##X(uint64_t v) {                \
+		__asm__ __volatile__("mov %0, %%cr" #X ::"a"(v));       \
+	}
+
+_ASM_OP(cli)
+_ASM_OP(sti)
+_ASM_OP(hlt)
+_ASM_MAKE_CRX(1)
+_ASM_MAKE_CRX(2)
+_ASM_MAKE_CRX(3)
+_ASM_MAKE_CRX(4)
+
+#undef _ASM_OP
+#undef _ASM_MAKE_CRX
 
 static INLINE uint8_t asm_inb(uint16_t port) {
 	uint8_t data;
@@ -13,32 +38,12 @@ static INLINE void asm_outb(uint16_t port, uint8_t data) {
 	__asm__ __volatile__("outb %0, %1" : : "a"(data), "Nd"(port));
 }
 
-#define _ASM_OP(op)                         \
-	static INLINE void asm_##op(void) { \
-		__asm__ __volatile__(#op);  \
-	}
-
-_ASM_OP(cli)
-_ASM_OP(sti)
-_ASM_OP(hlt)
-
-static INLINE void halt(void) {
+static INLINE noreturn void asm_halt(void) {
+loop:
 	asm_cli();
 	asm_hlt();
+	goto loop;
 }
-
-#define _ASM_MAKE_CRX(X)                                                \
-	static INLINE uint64_t asm_read_cr##X(void) {                   \
-		uint64_t v;                                             \
-		__asm__ __volatile__("mov %%cr" #X ", %0" : "=r"(v) :); \
-		return v;                                               \
-	}                                                               \
-	static INLINE void asm_write_cr##X(uint64_t v) {                \
-		__asm__ __volatile__("mov %0, %%cr" #X ::"a"(v));       \
-	}
-
-_ASM_MAKE_CRX(2)
-_ASM_MAKE_CRX(3)
 
 typedef enum {
 	MSR_STAR = 0xc0000081,

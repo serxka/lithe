@@ -14,9 +14,10 @@ BreakBeforeBinaryOperators: NonAssignment
 BreakStringLiterals: true
 ContinuationIndentWidth: 8
 IndentCaseLabels: false
-MaxEmptyLinesToKeep: 2
+IndentCaseLabels: true
+MaxEmptyLinesToKeep: 1
 PointerAlignment: Left
 SortIncludes: false
+SortIncludes: true
 SpaceAfterCStyleCast: false
 UseTab: ForIndentation
-IndentCaseLabels: true

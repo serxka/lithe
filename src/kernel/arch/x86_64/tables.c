@@ -1,11 +1,9 @@
-#include <kernel/kprintf.h>
-#include <lithe/base/attributes.h>
-#include <lithe/base/defs.h>
-#include <lithe/mem.h>
+#include <utils/base/attributes.h>
+#include <utils/base/defs.h>
+#include <utils/mem.h>
 
-#include "isr.h"
-
-// IDT
+#include <kernel/arch/x86_64/isr.h>
+#include <kernel/arch/x86_64/tables.h>
 
 typedef struct {
 	uint16_t offset_lower;
@@ -21,7 +19,7 @@ static struct {
 	uint16_t limit;
 	uint64_t offset;
 } PACKED idt_ptr;
-static idt_entry_t idt[256];
+static idt_entry_t ALIGNED(0x10) idt[256];
 
 static void idt_set_gate(uint8_t idx, void (*handler)(void), uint16_t segment,
                          uint8_t flags, uint8_t ist) {
@@ -120,7 +118,7 @@ void gdt_init(void) {
 
 	// Set our TSS segment up
 	uintptr_t tss_addr = (uintptr_t)&gdt.tss;
-	size_t tss_seg = LENGTH(gdt.entries) - 1;
+	size_t tss_seg = length$(gdt.entries) - 1;
 	gdt.entries[tss_seg].limit_low = sizeof(gdt.tss);
 	gdt.entries[tss_seg].base_low = tss_addr & 0xFFFF;
 	gdt.entries[tss_seg].base_middle = (tss_addr >> 16) & 0xFF;

@@ -1,13 +1,13 @@
 #pragma once
 
-#include <lithe/base/defs.h>
-#include <lithe/base/error.h>
-#include <lithe/base/result.h>
+#include <utils/base/defs.h>
+#include <utils/base/error.h>
+#include <utils/base/result.h>
 
-typedef result(uintptr_t, error) alloc_result;
+typedef result_t(uintptr_t, error_t) alloc_result_t;
 
 void alloc_init(uint64_t mem_available);
 void alloc_frame_set(uint64_t addr);
 void alloc_frame_clear(uint64_t addr);
 bool alloc_frame_test(uint64_t addr);
-alloc_result alloc_first_frame(void);
+alloc_result_t alloc_first_frame(void);

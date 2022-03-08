@@ -45,7 +45,7 @@ SECTIONS
 	}
 
 	_end = . - _kernel_vma;
-	
+
 	/DISCARD/ :
 	{
 		*(.comment)

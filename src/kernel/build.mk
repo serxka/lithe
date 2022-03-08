@@ -6,8 +6,8 @@ KERNEL_SRCS := \
 	$(wildcard src/kernel/*.c) \
 	$(wildcard src/kernel/arch/${TARGET_ARCH}/*.c) \
 	$(wildcard src/kernel/arch/${TARGET_ARCH}/*.asm) \
-	$(wildcard src/lithe/*/*.c) \
-	$(wildcard src/lithe/*.c)
+	$(wildcard src/utils/*/*.c) \
+	$(wildcard src/utils/*.c)
 
 # Pattern substitute them into objects out of tree
 KERNEL_OBJS := $(patsubst src/%, ${OUTDIR}/%.o, ${KERNEL_SRCS})
@@ -17,7 +17,8 @@ K_CFLAGS := \
 	${CFLAGS} \
 	-ffreestanding \
 	-nostdlib \
-	-Isrc/kernel
+	-Isrc/kernel \
+	-DLITHE_KERNEL
 
 K_ASFLAGS := \
 	${ASFLAGS}
