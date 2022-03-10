@@ -35,7 +35,7 @@ void vmm_init(void) {
 	spinlock_init$(mmu_lock);
 
 	// Allocate and zero out a page for our kernel PML4
-	kernel_space = unwrap$(alloc_first_frame());
+	kernel_space = unwrap$(alloc_page());
 	memset((void*)kernel_space, 0, MEM_PAGE_SIZE);
 
 	// Identity map our kernel
@@ -66,7 +66,7 @@ addr_result_t vmm_virt2phys(addr_space_t space, vm_addr_t addr) {
 
 space_result_t vmm_new_userspace(void) {
 	addr_space_t space =
-	        vmm_phys2kernel(try$(space_result_t, alloc_first_frame()));
+	        vmm_phys2kernel(try$(space_result_t, alloc_page()));
 	// Copy the base kernel PML4 into our address space
 	memcpy((void*)space, (void*)kernel_space, MEM_PAGE_SIZE);
 
@@ -99,7 +99,7 @@ static addr_result_t vmm_get_pml_alloc(pml_table_t* table, size_t idx,
 		return OK(addr_result_t,
 		          table->entries[idx].phys << MEM_PAGE_SHIFT);
 	} else {
-		pm_addr_t addr = try$(addr_result_t, alloc_first_frame());
+		pm_addr_t addr = try$(addr_result_t, alloc_page());
 		memset((void*)addr, 0, MEM_PAGE_SIZE);
 		table->entries[idx] = pml_new(addr, flags);
 		return OK(addr_result_t, addr);
@@ -166,7 +166,7 @@ maybe_t vmm_alloc_range(addr_space_t space, vm_range_t virt_range,
 	spinlock_take$(mmu_lock);
 
 	for (size_t i = 0; i < (virt_range.size / MEM_PAGE_SIZE); ++i) {
-		pm_addr_t phys = try$(maybe_t, alloc_first_frame());
+		pm_addr_t phys = try$(maybe_t, alloc_page());
 		addr_result_t res =
 		        vmm_map_page(space,
 		                     align_down$(virt_range.base, MEM_PAGE_SIZE)
@@ -264,7 +264,7 @@ static void vmm_destroy_space_pml(uint8_t level, pml_table_t* table,
 			continue;
 		vmm_destroy_space_pml(level - 1, (pml_table_t*)pml.ok, 512);
 	}
-	alloc_frame_clear((uintptr_t)table);
+	alloc_free_page((uintptr_t)table);
 }
 
 void vmm_destroy_space(addr_space_t space) {
