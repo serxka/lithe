@@ -5,7 +5,7 @@ KERNEL = ${OUTDIR}/kernel/kernel
 KERNEL_SRCS := \
 	$(wildcard src/kernel/*.c) \
 	$(wildcard src/kernel/arch/${TARGET_ARCH}/*.c) \
-	$(wildcard src/kernel/arch/${TARGET_ARCH}/*.asm) \
+	$(wildcard src/kernel/arch/${TARGET_ARCH}/*.S) \
 	$(wildcard src/utils/*/*.c) \
 	$(wildcard src/utils/*.c) \
 	$(wildcard src/hw/*/*.c) \
@@ -23,15 +23,16 @@ K_CFLAGS := \
 	-DLITHE_KERNEL
 
 K_ASFLAGS := \
-	${ASFLAGS}
+	${ASFLAGS} \
+	-ffreestanding
 
 # Rules to match only building files from the kernel build directory
 ${OUTDIR}/kernel/%.c.o: src/kernel/%.c
 	@${MKDIR}
 	${CC} ${K_CFLAGS} -c -MMD -o $@ $<
-${OUTDIR}/kernel/%.asm.o: src/kernel/%.asm
+${OUTDIR}/kernel/%.S.o: src/kernel/%.S
 	@${MKDIR}
-	${AS} ${K_ASFLAGS} -MD -MF ${@:.o=.d} -o $@ $<
+	${AS} ${K_ASFLAGS} -c -MMD -o $@ $<
 
 # Build our kernel image
 ${KERNEL}: ${KERNEL_OBJS}
