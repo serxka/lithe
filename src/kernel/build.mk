@@ -37,8 +37,12 @@ ${OUTDIR}/kernel/%.S.o: src/kernel/%.S
 # Build our kernel image
 ${KERNEL}: ${KERNEL_OBJS}
 	@${MKDIR}
+ifeq ($(TARGET_ARCH),x86_64/)
 	${LD} -T src/kernel/arch/${TARGET_ARCH}/link.ld --build-id=none -o $@.64 $^
 	${OC} -I elf64-x86-64 -O elf32-i386 $@.64 $@
+else
+	${LD} -T src/kernel/arch/${TARGET_ARCH}/link.ld --build-id=none -o $@ $^
+endif
 
 # Add the kernel to our list of possible targets
 TARGETS += ${KERNEL}
